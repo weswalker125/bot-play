@@ -1,0 +1,17 @@
+{
+  "name": "slackbot",
+  "version": "1.0.0",
+  "description": "a slackbot",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate": "node resources/generate.js",
+    "test": "jasmine"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@slack/client": "^3.14.2",
+    "aws-sdk": "^2.7.13",
+  }
+}
