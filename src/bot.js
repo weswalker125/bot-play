@@ -1,15 +1,28 @@
+const keywords = require('./lookup.js');
+
 const Bot = function(web) {
 	this.web = web;
 };
 
+Array.prototype.contains = function(obj) {
+    var i = this.length;
+    while (i--) {
+        if (this[i] === obj) {
+            return true;
+        }
+    }
+    return false;
+}
+
 Bot.prototype.process = function(event) {
-	// const text = event.text
-	// 	.replace(/http[^\s]*/, '')
-	// 	.replace(/@[^\s]+/, '');
-	
+	var words = event.text.toLowerCase().split(" ");
+
 	var reply = null;
-	if (event.text.includes("hey")) {
-		reply = "hey what?";
+	for (var i = 0; i < words.length; ++i) {
+		if (words[i] in keywords.lookup) {
+			reply = keywords.lookup[words[i]];
+			break;
+		}
 	}
 
 	if (reply) {
