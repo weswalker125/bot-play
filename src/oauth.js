@@ -14,8 +14,8 @@ module.exports.retrieveAccessToken = (teamId) => {
 	
 	return new Promise((resolve, reject) => {
 		database.get(params).promise()
-			.then(result => resolve(result.Item.botAccessToken))
 			//.then(result => console.log(`result: ${JSON.stringify(result)}`))
+			.then(result => resolve(result.Item.botAccessToken))
 			.catch(error => reject(new Error(`Error retrieving OAuth access token: ${error}`)));
 	});
 };

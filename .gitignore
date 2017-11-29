@@ -7,5 +7,5 @@ jspm_packages
 
 # Sensitive files
 local.yml
-
 lookup.js
+secrets/

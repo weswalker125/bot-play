@@ -1,4 +1,4 @@
-const keywords = require('./lookup.js');
+const keywords = require('../secrets/lookup.js');
 
 const Bot = function(web) {
 	this.web = web;

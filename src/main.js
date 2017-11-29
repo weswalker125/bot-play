@@ -1,8 +1,10 @@
-const https = require('https');
-const OAuth = require('./oauth.js');
-const Templates = require('./templates.js');
-const WebClient = require('@slack/client').WebClient;
-const Bot = require('./bot.js');
+const
+    debug = require('debug')('index'),
+    https = require('https'),
+    OAuth = require('./oauth.js'),
+    Templates = require('./templates.js'),
+    WebClient = require('@slack/web-api'),
+    Bot = require('./bot.js');
 
 const client = {
     id: process.env.CLIENT_ID,
@@ -10,6 +12,7 @@ const client = {
 };
 
 module.exports.install = (event, context, callback) => {
+    console.log("hit: install");
     callback(null, {
         statusCode: 200,
         headers: {
@@ -20,6 +23,7 @@ module.exports.install = (event, context, callback) => {
 };
 
 module.exports.authorized = (event, context, callback) => {
+    console.log("hit: authorized");
     const code = event.queryStringParameters.code;
     
     console.log(`id: ${client.id}, secret: ${client.secret}, code: ${code}`);
@@ -44,7 +48,7 @@ module.exports.authorized = (event, context, callback) => {
 };
 
 module.exports.event = (event, context, callback) => {
-    console.log("event hit!");
+    console.log("hit: event");
     console.log(event.body);
 
     const jsonBody = JSON.parse(event.body);
