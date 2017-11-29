@@ -2,16 +2,23 @@
   "name": "slackbot",
   "version": "1.0.0",
   "description": "a slackbot",
-  "main": "handler.js",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jasmine",
     "generate": "node resources/generate.js",
-    "test": "jasmine"
+    "gateway": "cd gateway;serverless deploy -v",
+    "deploy-jhu": "serverless deploy -v --stage jhu-new-bot",
+    "deploy-ateamslackers": "serverless deploy -v --stage ateamslackers-bot",
+    "pull-secrets": "aws s3 sync s3://wes.apps.ww-slacker/secrets ./secrets/",
+    "push-secerts": "aws s3 sync ./secrets s3://wes.apps.ww-slacker/secrets/"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@slack/client": "^3.14.2",
-    "aws-sdk": "^2.7.13",
+    "@slack/web-api": "^5.4.0",
+    "aws-sdk": "^2.7.13"
+  },
+  "devDependencies": {
+    "serverless": "1.57.0"
   }
 }

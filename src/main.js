@@ -1,8 +1,10 @@
-const https = require('https');
-const OAuth = require('./oauth.js');
-const Templates = require('./templates.js');
-const WebClient = require('@slack/client').WebClient;
-const Bot = require('./bot.js');
+const
+    debug = require('debug')('index'),
+    https = require('https'),
+    OAuth = require('./oauth.js'),
+    Templates = require('./templates.js'),
+    WebClient = require('@slack/web-api'),
+    Bot = require('./bot.js');
 
 const client = {
     id: process.env.CLIENT_ID,

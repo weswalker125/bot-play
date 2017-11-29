@@ -1,0 +1,63 @@
+service: BotPlayer
+
+package:
+  exclude:
+    - "**"
+  include:
+    - node_modules/**
+    - src/**
+    - secrets/lookup.js
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: us-east-1
+  memorySize: 512
+  stage: production
+  environment:
+    CLIENT_ID: ${file(secrets/local.yml):${opt:stage, self:provider.stage}.slack.clientId}
+    CLIENT_SECRET: ${file(secrets/local.yml):${opt:stage, self:provider.stage}.slack.clientSecret}
+    ACCESS_TOKEN_TABLE_NAME: 
+      'Fn::ImportValue': BotPlayDB-table
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:*
+  apiGateway:
+    restApiId:
+      'Fn::ImportValue': BotPlayGW-restApiId
+    restApiRootResourceId:
+      'Fn::ImportValue': BotPlayGW-rootResourceId
+
+  stackPolicy: # Optional CF stack policy. The example below allows updates to all resources except deleting/replacing EC2 instances (use with caution!)
+    - Effect: Allow
+      Principal: '*'
+      Action: 'Update:*'
+      Resource: '*'
+    - Effect: Deny
+      Principal: '*'
+      Resource: '*'
+      Action:
+        - Update:Replace
+        - Update:Delete
+      Condition:
+        StringEquals:
+          ResourceType:
+            - AWS::EC2::Instance
+
+
+functions:
+  install:
+    handler: src/main.install
+    events:
+      - http: GET install
+  authorized:
+    handler: src/main.authorized
+    events:
+      - http: GET authorized
+  event:
+    handler: src/main.event
+    events:
+      - http: POST event
