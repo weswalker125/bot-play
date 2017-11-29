@@ -10,6 +10,7 @@ const client = {
 };
 
 module.exports.install = (event, context, callback) => {
+    console.log("hit: install");
     callback(null, {
         statusCode: 200,
         headers: {
@@ -20,6 +21,7 @@ module.exports.install = (event, context, callback) => {
 };
 
 module.exports.authorized = (event, context, callback) => {
+    console.log("hit: authorized");
     const code = event.queryStringParameters.code;
     
     console.log(`id: ${client.id}, secret: ${client.secret}, code: ${code}`);
@@ -44,7 +46,7 @@ module.exports.authorized = (event, context, callback) => {
 };
 
 module.exports.event = (event, context, callback) => {
-    console.log("event hit!");
+    console.log("hit: event");
     console.log(event.body);
 
     const jsonBody = JSON.parse(event.body);
