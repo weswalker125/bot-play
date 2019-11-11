@@ -90,7 +90,3 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-
-plugins:
-  - serverless-dynamodb-local
-  - serverless-offline
