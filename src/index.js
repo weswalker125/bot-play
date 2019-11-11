@@ -1,4 +1,6 @@
 const
+    Logger = require('node-json-logger'),
+    logger = new Logger({ timestamp: false }),
     SlackAuthenticationModule = require('./authentication.js'),
     Bot = require('./bot.js'),
     aws = require('aws-sdk'),
@@ -26,8 +28,8 @@ const auth = new SlackAuthenticationModule(client, dynamoDb, ACCESS_TOKEN_TABLE)
  * Lambda event handler
  */
 exports.handler = (event, context, callback) => {
-    console.log('handler:event %j', event);
-    console.log('handler:context %j', context);
+    logger.debug(`Event: ${JSON.stringify(event)}`);
+    logger.debug(`Context: ${JSON.stringify(context)}`);
     
     // Confirm request's validity/origin
     auth.verifyRequest(event, client.signingSecret).then(verifiedEvent => {
@@ -46,7 +48,7 @@ exports.handler = (event, context, callback) => {
                 });
                 break;
             default:
-                console.log('unexpected request path: ' + verifiedEvent.requestPath);
+                logger.warn(`Unexpected request path: ${verifiedEvent.requestPath}`);
         }
     }).catch(reason => {
         callback(null, {
@@ -54,48 +56,49 @@ exports.handler = (event, context, callback) => {
             headers: {
                 'Content-Type': 'text/html'
             },
-            body: 'Verification failed: ' + reason
+            body: `Verification failed:  ${reason}`
         });
     })
 };
 
-function authorized(payload, context) {
-    console.log('authorized:payload %j', payload);
-    console.log('authorized:context %j', context);
+function authorized(query, context) {
+    logger.debug(`Query: ${JSON.stringify(query)}`);
 
     return new Promise((resolve, reject) => {
-        auth.requestAccessTokenFromSlack(payload.code || {})
+        auth.requestAccessTokenFromSlack(query.code || {})
             .then(response => auth.storeAccessToken(response))
             .then(resolve)
             .catch(reject);
     });
 }
 
-function receiveEvent(payload) {
-    console.log('receiveEvent:payload %j', payload);
+function receiveEvent(body) {
+    logger.debug(`Event Body: ${JSON.stringify(body)}`);
 
-    // const jsonBody = JSON.parse(payload.body);
     const response = { statusCode: 200 };
 
     return new Promise((resolve, reject) => {
-        switch (payload.type) {
+        switch (body.type) {
             // Auth challenge?
             case 'url_verification':
                 response.headers = {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 };
-                response.body = payload.challenge;
+                response.body = body.challenge;
                 break;
             // An event we're subscribed to has occurred
             case 'event_callback':
-                auth.retrieveAccessToken(payload.team_id)
-                    .then(botAccessToken => handleEvent(payload.event, botAccessToken))
+                auth.retrieveAccessToken(body.team_id)
+                    .then(botAccessToken => handleEvent(body.event, botAccessToken))
                     .catch(error => { 
-                        console.log(error);
+                        logger.error(error);
                         response.statusCode = 500;
                         response.body = error;
                     });
                 break;
+            default:
+                response.statusCode = 500;
+                response.body = 'Unexpected event type';
         }
         resolve(response);
     });
@@ -107,8 +110,8 @@ function receiveEvent(payload) {
  * @param {*} token 
  */
 function handleEvent(event, token) {
-    console.log('handleEvent:event %j', event);
-    console.log('handleEvent:token %j', token);
+    logger.debug(`Event Body [event]: ${JSON.stringify(event)}`);
+    logger.debug(`Token: ${JSON.stringify(token)}`);
     
     const bot = new Bot(new WebClient(token));
     switch (event.type) {
@@ -119,6 +122,6 @@ function handleEvent(event, token) {
             }
             break;
         default:
-            console.log('Unexpected event type: ' + event.type);
+            logger.error('Unexpected event type: ' + event.type);
     }
 }

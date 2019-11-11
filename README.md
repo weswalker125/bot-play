@@ -31,3 +31,7 @@ prod:
 
 
 ## Deploy
+
+
+## Local
+`sls invoke local -e IS_OFFLINE=true -s ateam -f bot-play -p event -d '{ "requestPath": "/event", "body": { "type": "event_callback", "team_id": "ateam", "event": {"type": "message", "subtype": "regular", "text": "/covid US" }} }'`

@@ -2,11 +2,6 @@ service: BotPlay
 
 custom:
   tableName: 'BotPlay-AccessTokens-${self:provider.stage}'
-  nav:
-    install_path: install
-    event_path: event
-    auth_path: authorized
-    install_redirect: https://slack.com/
 
 provider:
   name: aws
@@ -29,19 +24,21 @@ provider:
     SLACK_APP_CLIENT_ID: ${file(config.yml):${opt:stage, self:provider.stage}.slack.clientId}
     SLACK_APP_CLIENT_SECRET: ${file(config.yml):${opt:stage, self:provider.stage}.slack.clientSecret}
     SLACK_APP_SIGNING_SECRET: ${file(config.yml):${opt:stage, self:provider.stage}.slack.signingSecret}
+    COVID_API_HOST: ${file(config.yml):${opt:stage, self:provider.stage}.covid.host}
+    COVID_API_KEY: ${file(config.yml):${opt:stage, self:provider.stage}.covid.key}
 
 functions:
   bot-play:
     handler: src/index.handler
     events:
       - http:
-          path: ${self:custom.nav.event_path}
+          path: event
           method: post
           integration: lambda
           response:
             template: $input.path('$')
       - http:
-          path: ${self:custom.nav.install_path}
+          path: install
           method: get
           integration: lambda
           response:
@@ -58,7 +55,7 @@ functions:
                   Location: integration.response.body.errorMessage
                   Cache-Control: "'no-cache, no-store, must-revalidate'"
       - http:
-          path: ${self:custom.nav.auth_path}
+          path: authorized
           method: get
           integration: lambda
           response:
