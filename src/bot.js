@@ -1,4 +1,4 @@
-const keywords = require('./lookup.js');
+const keywords = require('../secrets/lookup.js');
 
 const Bot = function(web) {
 	this.web = web;
@@ -26,9 +26,18 @@ Bot.prototype.process = function(event) {
 	}
 
 	if (reply) {
-		console.log(`text: ${event.text}, reply: ${reply}, channel: ${event.channel}`);
-		this.web.chat.postMessage(event.channel, reply)
-			.catch(error => console.log(`Error posting Slack message: ${error}`));
+		(async () => {
+			try {
+				console.log(`text: ${event.text}, reply: ${reply}, channel: ${event.channel}`);
+				const result = await this.web.chat.postMessage({
+					channel: event.channel,
+					text: reply
+				});
+				console.log(`Successfully sent message ${result.ts} in channel: ${event.channel}`);
+			} catch (error) {
+				console.log(`Error posting Slack message: ${error}`);
+			}
+		})();
 	}
 };
 

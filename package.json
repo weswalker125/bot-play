@@ -1,17 +1,18 @@
 {
-  "name": "slackbot",
+  "name": "BotPlay",
   "version": "1.0.0",
-  "description": "a slackbot",
-  "main": "handler.js",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "generate": "node resources/generate.js",
-    "test": "jasmine"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@slack/client": "^3.14.2",
-    "aws-sdk": "^2.7.13",
+    "aws-sdk": "^2.568.0",
+    "@slack/web-api": "^5.4.0",
+    "serverless-dynamodb-local": "^0.2.38",
+    "serverless-offline": "^5.12.0"
   }
 }

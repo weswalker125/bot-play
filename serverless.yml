@@ -1,49 +1,86 @@
-service: ww-slacker
+service: BotPlay
 
-package:
-  exclude:
-    - "**"
-  include:
-    - node_modules/**
-    - src/**
+custom:
+  tableName: 'BotPlay-AccessTokens-${self:provider.stage}'
+  nav:
+    install_path: install
+    event_path: event
+    auth_path: authorized
+    install_redirect: https://slack.com/
 
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs10.x
+  # Override stage at runtime with --stage {stagename}
+  stage: ${opt:stage, 'dev'}
   region: us-east-1
-  memorySize: 512
-  stage: production
-  environment:
-    CLIENT_ID: ${file(local.yml):${opt:stage, self:provider.stage}.slack.clientId}
-    CLIENT_SECRET: ${file(local.yml):${opt:stage, self:provider.stage}.slack.clientSecret}
-    ACCESS_TOKEN_TABLE_NAME: ${self:resources.Resources.accessTokenTable.Properties.TableName}
   iamRoleStatements:
     - Effect: Allow
       Action:
+        - dynamodb:Query
+        - dynamodb:Scan
         - dynamodb:GetItem
         - dynamodb:PutItem
-      Resource: arn:aws:dynamodb:${self:provider.region}:*:*
+        - dynamodb:UpdateItem
+      Resource:
+        - { "Fn::GetAtt": ["BotPlayDynamoDBTable", "Arn"] }
+  environment:
+    ACCESS_TOKEN_TABLE: ${self:custom.tableName}
+    SLACK_APP_CLIENT_ID: ${file(config.yml):${opt:stage, self:provider.stage}.slack.clientId}
+    SLACK_APP_CLIENT_SECRET: ${file(config.yml):${opt:stage, self:provider.stage}.slack.clientSecret}
+    SLACK_APP_SIGNING_SECRET: ${file(config.yml):${opt:stage, self:provider.stage}.slack.signingSecret}
 
 functions:
-  install:
-    handler: src/handler.install
+  bot-play:
+    handler: src/index.handler
     events:
-      - http: GET install
-  authorized:
-    handler: src/handler.authorized
-    events:
-      - http: GET authorized
-  event:
-    handler: src/handler.event
-    events:
-      - http: POST event
+      - http:
+          path: ${self:custom.nav.event_path}
+          method: post
+          integration: lambda
+          response:
+            template: $input.path('$')
+      - http:
+          path: ${self:custom.nav.install_path}
+          method: get
+          integration: lambda
+          response:
+            template: $input.path('$')
+            statusCodes:
+              200:
+                headers:
+                  Content-Type: "'text/html'"
+              201:
+                pattern: ''
+              301:
+                pattern: http.*
+                headers:
+                  Location: integration.response.body.errorMessage
+                  Cache-Control: "'no-cache, no-store, must-revalidate'"
+      - http:
+          path: ${self:custom.nav.auth_path}
+          method: get
+          integration: lambda
+          response:
+            template: $input.path('$')
+            statusCodes:
+              200:
+                headers:
+                  Content-Type: "'text/html'"
+              201:
+                pattern: ''
+              301:
+                pattern: http.*
+                headers:
+                  Location: integration.response.body.errorMessage
+                  Cache-Control: "'no-cache, no-store, must-revalidate'"
 
 resources:
   Resources:
-    accessTokenTable:
-      Type: AWS::DynamoDB::Table
+    BotPlayDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
       Properties:
-        TableName: ${self:service}-${opt:stage, self:provider.stage}-accessTokenTable
+        TableName: ${self:custom.tableName}
         AttributeDefinitions:
           - AttributeName: teamId
             AttributeType: S
@@ -53,3 +90,7 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+
+plugins:
+  - serverless-dynamodb-local
+  - serverless-offline
