@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy-ateam": "serverless deploy -v --stage ateam",
+    "pull-secrets": "aws s3 sync s3://wes.apps.ww-slacker/secrets ./secrets/",
+    "push-secrets": "aws s3 sync ./secrets s3://wes.apps.ww-slacker/secrets/"
   },
   "keywords": [],
   "author": "",
