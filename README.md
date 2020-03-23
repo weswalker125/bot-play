@@ -9,6 +9,7 @@ Example of lookup.js
 exports.lookup = {
 	hello: "Hola!",
 	goodbye: "See ya later."
+};
 ```
 
 Example of local.yml
@@ -18,7 +19,11 @@ prod:
   slack:
     clientId: asdsadad
     clientSecret: asdasd
-    signingSecret:asadasdadad
+    signingSecret: asadasdadad
+  covid:
+    host: asadasdadad.asdoijsaoidja.com
+    key: asadasdadadasadasdadad
+
 ```
 
 ## Setup
