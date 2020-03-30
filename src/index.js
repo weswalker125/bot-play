@@ -1,72 +1,80 @@
 const
     Logger = require('node-json-logger'),
-    logger = new Logger({ timestamp: false }),
     SlackAuthenticationModule = require('./authentication.js'),
     Bot = require('./bot.js'),
-    aws = require('aws-sdk'),
+    Aws = require('aws-sdk'),
     { WebClient } = require('@slack/web-api'),
-    responseTemplates = require('./templates.js');
+    ResponseTemplates = require('./templates.js');
 
-const { ACCESS_TOKEN_TABLE, IS_OFFLINE } = process.env;
-const client = {
-    id: process.env.SLACK_APP_CLIENT_ID,
-    secret: process.env.SLACK_APP_CLIENT_SECRET,
+// Environment variables
+const { ACCESS_TOKEN_TABLE, IS_OFFLINE, LOG_LEVEL, SLACK_APP_CLIENT_ID, SLACK_APP_CLIENT_SECRET, SLACK_APP_SIGNING_SECRET } = process.env;
+
+// Configure logger
+const logger = new Logger({ timestamp: false, level: LOG_LEVEL });
+
+const slackClientCredentials = {
+    id: SLACK_APP_CLIENT_ID,
+    secret: SLACK_APP_CLIENT_SECRET,
     // Signing Secret is used to compute hash of request to verify it's origin.
-    signingSecret: process.env.SLACK_APP_SIGNING_SECRET
+    signingSecret: SLACK_APP_SIGNING_SECRET
 };
 
 // Set up DynamoDB accessor (local or cloud)
 const dynamoDb = IS_OFFLINE === 'true' ?
-    new aws.DynamoDB.DocumentClient({
+    new Aws.DynamoDB.DocumentClient({
         region: 'localhost',
         endpoint: 'http://localhost:8000'
     }) :
-    new aws.DynamoDB.DocumentClient();
+    new Aws.DynamoDB.DocumentClient();
 
-const auth = new SlackAuthenticationModule(client, dynamoDb, ACCESS_TOKEN_TABLE);
+// Authentication instance used for managing access token for bot install and event handling.
+const slackAuth = new SlackAuthenticationModule(slackClientCredentials, dynamoDb, ACCESS_TOKEN_TABLE);
+
 /**
  * Lambda event handler
  */
 exports.handler = (event, context, callback) => {
     logger.debug(`Event: ${JSON.stringify(event)}`);
     logger.debug(`Context: ${JSON.stringify(context)}`);
-    
+
     // Confirm request's validity/origin
-    auth.verifyRequest(event, client.signingSecret).then(verifiedEvent => {
-        switch(verifiedEvent.requestPath) {
-            case '/install':
-                context.succeed(responseTemplates.install(client.id));
-                break;
-            case '/authorized':
-                authorized(verifiedEvent.query || {}).then(() => {
-                    context.succeed(responseTemplates.authorized());
-                });
-                break;
-            case '/event':
-                receiveEvent(verifiedEvent.body || {}, context).then(response => {
-                    callback(null, response);
-                });
-                break;
-            default:
-                logger.warn(`Unexpected request path: ${verifiedEvent.requestPath}`);
-        }
-    }).catch(reason => {
-        callback(null, {
-            statusCode: 400,
-            headers: {
-                'Content-Type': 'text/html'
-            },
-            body: `Verification failed:  ${reason}`
-        });
-    })
+    slackAuth.verifyRequest(event, slackClientCredentials.signingSecret)
+        .then(verifiedEvent => {
+            switch (verifiedEvent.requestPath) {
+                case '/install':
+                    context.succeed(ResponseTemplates.install(slackClientCredentials.id));
+                    break;
+                case '/authorized':
+                    authorized(verifiedEvent.query || {}).then(() => {
+                        context.succeed(ResponseTemplates.authorized());
+                    });
+                    break;
+                case '/event':
+                    receiveEvent(verifiedEvent.body || {}, context).then(response => {
+                        callback(null, response);
+                    });
+                    break;
+                default:
+                    logger.warn(`Unexpected request path: ${verifiedEvent.requestPath}`);
+            }
+        }).catch(error => {
+            logger.error(`Failed to handle event: ${error}`)
+            callback(null, {
+                statusCode: 400,
+                headers: {
+                    'Content-Type': 'text/html'
+                },
+                body: `Verification failed:  ${error}`
+            });
+        })
 };
 
 function authorized(query, context) {
     logger.debug(`Query: ${JSON.stringify(query)}`);
 
     return new Promise((resolve, reject) => {
-        auth.requestAccessTokenFromSlack(query.code || {})
-            .then(response => auth.storeAccessToken(response))
+        slackAuth.requestAccessTokenFromSlack(query.code || {})
+            .then(response => slackAuth.storeAccessToken(response))
             .then(resolve)
             .catch(reject);
     });
@@ -88,9 +96,10 @@ function receiveEvent(body) {
                 break;
             // An event we're subscribed to has occurred
             case 'event_callback':
-                auth.retrieveAccessToken(body.team_id)
+                // Get access token to Slack workspace, pass to bot to handle/respond accordingly
+                slackAuth.retrieveAccessToken(body.team_id)
                     .then(botAccessToken => handleEvent(body.event, botAccessToken))
-                    .catch(error => { 
+                    .catch(error => {
                         logger.error(error);
                         response.statusCode = 500;
                         response.body = error;
@@ -110,9 +119,9 @@ function receiveEvent(body) {
  * @param {*} token 
  */
 function handleEvent(event, token) {
-    logger.debug(`Event Body [event]: ${JSON.stringify(event)}`);
-    logger.debug(`Token: ${JSON.stringify(token)}`);
-    
+    logger.trace(`Event Body [event]: ${JSON.stringify(event)}`);
+    logger.trace(`Token: ${JSON.stringify(token)}`);
+
     const bot = new Bot(new WebClient(token));
     switch (event.type) {
         case 'message':

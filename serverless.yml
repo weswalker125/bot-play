@@ -26,6 +26,7 @@ provider:
     SLACK_APP_SIGNING_SECRET: ${file(config.yml):${opt:stage, self:provider.stage}.slack.signingSecret}
     COVID_API_HOST: ${file(config.yml):${opt:stage, self:provider.stage}.covid.host}
     COVID_API_KEY: ${file(config.yml):${opt:stage, self:provider.stage}.covid.key}
+    LOG_LEVEL: ${file(config.yml):${opt:stage, self:provider.stage}.logging.level}
 
 functions:
   bot-play:

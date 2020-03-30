@@ -2,10 +2,15 @@
  * DISCLAIMER: there is no "this" in arrow functions... do not
  * refactor the prototype methods as arrow functions as they lose their scope.
  */
-const 
-https = require('https'),
-Logger = require('node-json-logger'),
-logger = new Logger({ timestamp: false });
+const
+	https = require('https'),
+	Logger = require('node-json-logger');
+
+// Environment variables
+const { LOG_LEVEL } = process.env;
+
+// Configure logger
+const logger = new Logger({ timestamp: false, level: LOG_LEVEL });
 
 /**
  * 
@@ -27,7 +32,7 @@ function SlackAuthenticationModule(client, database, tableName) {
  * Authorize endpoint triggers exchange for OAuth token
  */
 SlackAuthenticationModule.prototype.requestAccessTokenFromSlack = function(code) {
-	logger.debug(`id: ${this.getClient().id}, secret: ${this.getClient().secret}, code: ${code}`);
+	logger.trace(`id: ${this.getClient().id}, secret: ${this.getClient().secret}, code: ${code}`);
 
 	return new Promise((resolve, reject) => {
 		https.get(`https://slack.com/api/oauth.access?client_id=${this.getClient().id}&client_secret=${this.getClient().secret}&code=${code}`, response => {
@@ -42,6 +47,10 @@ SlackAuthenticationModule.prototype.requestAccessTokenFromSlack = function(code)
 	});
 };
 
+/**
+ * Get Access Token from database.
+ * Operation required for posting messages to Slack.
+ */
 SlackAuthenticationModule.prototype.retrieveAccessToken = function(teamId) {
 	logger.debug(`Retrieving access token for team ${teamId} in table ${this.getTable()}`);
 	const params = {
@@ -52,6 +61,7 @@ SlackAuthenticationModule.prototype.retrieveAccessToken = function(teamId) {
 	};
 
 	return new Promise((resolve, reject) => {
+		// When running local just resolve (mocked).
 		if (process.env.IS_OFFLINE) {
 			resolve('good');
 		} else {
@@ -62,9 +72,12 @@ SlackAuthenticationModule.prototype.retrieveAccessToken = function(teamId) {
 	});
 };
 
+/**
+ * Save the provided access token to the database.
+ */
 SlackAuthenticationModule.prototype.storeAccessToken = function(payload) {
-	logger.debug(`Access Token Payload: ${payload}`);
-	logger.debug(`Storing access token ${payload.bot['bot_access_token']} for team ${payload.team_id} in table ${this.getTable()}`);
+	logger.trace(`Access Token Payload: ${payload}`);
+	logger.debug(`Storing access token for team ${payload.team_id} in table ${this.getTable()}`);
 	const params = {
 		TableName: this.getTable(),
 		Item: {

@@ -10,3 +10,7 @@ local.yml
 config.yml
 lookup.js
 secrets/
+
+# Diff files
+*.diff
+*.patch
