@@ -98,7 +98,7 @@ SlackAuthenticationModule.prototype.storeAccessToken = function(payload) {
 	});
 };
 
-SlackAuthenticationModule.prototype.verifyRequest = (request, signingSecret) => {
+SlackAuthenticationModule.prototype.verifyRequest = (request) => {
 	return new Promise((resolve, reject) => {
 		if (process.env.IS_OFFLINE) {
 			logger.debug('Request verification skipped for local execution.');
@@ -112,7 +112,7 @@ SlackAuthenticationModule.prototype.verifyRequest = (request, signingSecret) => 
 			}
 
 			// Check for Signing Secret (so we can compute signature)
-			if (!signingSecret) {
+			if (!this.getClient().signingSecret) {
 				reject("Slack signing secret is not set.");
 			}
 
