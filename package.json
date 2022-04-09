@@ -17,6 +17,7 @@
     "aws-sdk": "^2.814.0",
     "axios": ">=0.21.2",
     "moment": "^2.29.2",
-    "node-json-logger": "0.0.10"
+    "node-json-logger": "0.0.10",
+    "serverless": "^3.12.0"
   }
 }
