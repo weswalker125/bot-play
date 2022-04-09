@@ -16,7 +16,7 @@
     "@slack/web-api": "^6.5.1",
     "aws-sdk": "^2.814.0",
     "axios": ">=0.21.2",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "node-json-logger": "0.0.10"
   }
 }
