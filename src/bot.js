@@ -1,6 +1,6 @@
 const Logger = require('node-json-logger'),
 	Covid = require('./covid.js'),
-	keywords = require('../secrets/lookup.js');
+	keywords = require('../config/lookup.js');
 
 // pseudo-command (not a legit Slack command) to trigger virus stats response
 const COMMAND_COVID = '!covid ';

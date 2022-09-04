@@ -1,13 +1,13 @@
 {
   "name": "BotPlay",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "sls invoke local -e IS_OFFLINE=true -s ateam -f bot-play -p event -d '{ \"requestPath\": \"/event\", \"body\": { \"type\": \"event_callback\", \"team_id\": \"ateam\", \"event\": {\"type\": \"message\", \"subtype\": \"regular\", \"text\": \"/covid US\" }} }'",
     "deploy-ateam": "serverless deploy -v --stage ateam",
-    "pull-secrets": "aws s3 sync s3://wes.apps.ww-slacker/secrets ./secrets/",
-    "push-secrets": "aws s3 sync ./secrets s3://wes.apps.ww-slacker/secrets/"
+    "pull-secrets": "aws s3 sync s3://wes.apps.ww-slacker/config ./config/",
+    "push-secrets": "aws s3 sync ./config s3://wes.apps.ww-slacker/config/"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +18,6 @@
     "axios": ">=0.21.2",
     "moment": "^2.29.2",
     "node-json-logger": "0.0.10",
-    "serverless": "^3.12.0"
+    "serverless": "^3.22.0"
   }
 }
