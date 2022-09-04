@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "sls invoke local -e IS_OFFLINE=true -s ateam -f bot-play -p event -d '{ \"requestPath\": \"/event\", \"body\": { \"type\": \"event_callback\", \"team_id\": \"ateam\", \"event\": {\"type\": \"message\", \"subtype\": \"regular\", \"text\": \"/covid US\" }} }'",
-    "deploy-ateam": "serverless deploy -v --stage ateam",
+    "deploy-ateam": "serverless deploy -v -s ateam",
     "pull-secrets": "aws s3 sync s3://wes.apps.ww-slacker/config ./config/",
     "push-secrets": "aws s3 sync ./config s3://wes.apps.ww-slacker/config/"
   },

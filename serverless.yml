@@ -23,12 +23,12 @@ provider:
             - { "Fn::GetAtt": ["BotPlayDynamoDBTable", "Arn"] }
   environment:
     ACCESS_TOKEN_TABLE: ${self:custom.tableName}
-    SLACK_APP_CLIENT_ID: ${file(config/config.yml):${opt:stage, self:provider.stage}.slack.clientId}
-    SLACK_APP_CLIENT_SECRET: ${file(config/config.yml):${opt:stage, self:provider.stage}.slack.clientSecret}
-    SLACK_APP_SIGNING_SECRET: ${file(config/config.yml):${opt:stage, self:provider.stage}.slack.signingSecret}
-    COVID_API_HOST: ${file(config/config.yml):${opt:stage, self:provider.stage}.covid.host}
-    COVID_API_KEY: ${file(config/config.yml):${opt:stage, self:provider.stage}.covid.key}
-    LOG_LEVEL: ${file(config/config.yml):${opt:stage, self:provider.stage}.logging.level}
+    SLACK_APP_CLIENT_ID: ${file(./config/config.yml):${opt:stage, self:provider.stage}.slack.clientId}
+    SLACK_APP_CLIENT_SECRET: ${file(./config/config.yml):${opt:stage, self:provider.stage}.slack.clientSecret}
+    SLACK_APP_SIGNING_SECRET: ${file(./config/config.yml):${opt:stage, self:provider.stage}.slack.signingSecret}
+    COVID_API_HOST: ${file(./config/config.yml):${opt:stage, self:provider.stage}.covid.host}
+    COVID_API_KEY: ${file(./config/config.yml):${opt:stage, self:provider.stage}.covid.key}
+    LOG_LEVEL: ${file(./config/config.yml):${opt:stage, self:provider.stage}.logging.level}
 
 functions:
   bot-play:
